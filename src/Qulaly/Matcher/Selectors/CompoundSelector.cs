@@ -10,6 +10,7 @@ namespace Qulaly.Matcher.Selectors
             foreach (var selector in selectors)
             {
                 if (
+                    (selector is CaptureSelector) ||
                     (selector is TypeSelector) ||
                     (selector is UniversalTypeSelector) ||
                     (selector is PropertySelector) ||

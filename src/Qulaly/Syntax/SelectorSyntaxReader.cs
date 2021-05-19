@@ -38,7 +38,8 @@ namespace Qulaly.Syntax
             {
                 return ExpectOneOrMore(() =>
                 {
-                    return ExpectZeroOrOne(TypeSelector, out var firstIsZero) && ExpectZeroOrMore(SubclassSelector, out var secondIsZero) &&
+                    return ExpectZeroOrOne(() => Expect(TypeSelector,CaptureTypeSelector), out var firstIsZero) && 
+                           ExpectZeroOrMore(() => Expect(SubclassSelector, CaptureTypeSelector), out var secondIsZero) &&
                            ExpectZeroOrMore(() => Expect(PseudoElementSelector) && ExpectZeroOrMore(PseudoClassSelector), out var thirdIsZero) &&
                            !(firstIsZero && secondIsZero && thirdIsZero); // one or more
                 });
@@ -60,7 +61,7 @@ namespace Qulaly.Syntax
             // https://www.w3.org/TR/selectors-4/#typedef-simple-selector
             return Production(ProductionKind.SimpleSelector, () =>
             {
-                return Expect(TypeSelector, SubclassSelector);
+                return Expect(() => Expect(TypeSelector, CaptureTypeSelector), () => Expect(SubclassSelector, CaptureTypeSelector));
             });
         }
 
@@ -96,7 +97,6 @@ namespace Qulaly.Syntax
                 return Expect(
                     () => Expect(Char(':')) && Expect(IsPseudoClassSelector),
                     () => Expect(Char(':')) && Expect(HasPseudoClassSelector),
-                    () => Expect(Char(':')) && Expect(NotPseudoClassSelector),
                     () => Expect(Char(':')) && Expect(NotPseudoClassSelector),
                     () => Expect(Char(':')) && Expect(FunctionToken) && Expect(Expression) && Expect(Char(')')),
                     () => Expect(Char(':')) && Expect(Capture(IdentToken))
@@ -191,6 +191,15 @@ namespace Qulaly.Syntax
                     () => Expect(() => ExpectZeroOrMore(Space) && Expect(Capture(() => Expect(Char('>'), Char('+'), Char('~')))) && ExpectZeroOrMore(Space)),
                     () => Expect(Capture(() => ExpectOneOrMore(Space)))
                 );
+            });
+        }
+
+        public bool CaptureTypeSelector()
+        {
+            // <capture-type-selector> = $? <type-selector>
+            return Production(ProductionKind.Capture, () =>
+            {
+                return Expect(() => Expect(Capture(Char('$'))) && Expect(TypeSelector), () => Expect(Capture(Char('$'))) && Expect(PseudoClassSelector));
             });
         }
 

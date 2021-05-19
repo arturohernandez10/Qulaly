@@ -223,6 +223,28 @@ namespace Qulaly.Tests
         }
 
         [Fact]
+        public void NextSiblingCombinatorOneCapture()
+        {
+            var selector = new SelectorSyntaxParser().Parse("$ClassDeclaration + MethodDeclaration");
+            selector.Should().BeOfType<ComplexSelectorList>();
+            selector.ToSelectorString().Should().Be(
+                new ComplexSelectorList(
+                    new ComplexSelector(new CaptureSelector(new TypeSelector(SyntaxKind.ClassDeclaration)), new NextSiblingCombinator(), new TypeSelector(SyntaxKind.MethodDeclaration))
+                ).ToSelectorString());
+        }
+
+        [Fact]
+        public void ChildCombinatorOneCapture()
+        {
+            var selector = new SelectorSyntaxParser().Parse("ClassDeclaration > $MethodDeclaration");
+            selector.Should().BeOfType<ComplexSelectorList>();
+            selector.ToSelectorString().Should().Be(
+                new ComplexSelectorList(
+                    new ComplexSelector(new TypeSelector(SyntaxKind.ClassDeclaration), new ChildCombinator(), new CaptureSelector(new TypeSelector(SyntaxKind.MethodDeclaration)))
+                ).ToSelectorString());
+        }
+
+        [Fact]
         public void NextSiblingCombinator()
         {
             var selector = new SelectorSyntaxParser().Parse("ClassDeclaration + MethodDeclaration");

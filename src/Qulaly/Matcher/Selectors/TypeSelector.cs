@@ -2,6 +2,32 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Qulaly.Matcher.Selectors
 {
+    public class CaptureSelector : Selector
+    {
+        public Selector selector { get; }
+
+        public CaptureSelector(Selector typeSelector)
+        {
+            selector = typeSelector;
+        }
+
+        // Type Selector
+        public override SelectorMatcher GetMatcher()
+        {
+            return (in SelectorMatcherContext ctx) =>
+            {
+                var success = selector.GetMatcher()(ctx);
+                if (success)
+                    ctx.CapturedNodes.Add(ctx.Node);
+                return success;
+            };
+        }
+
+        public override string ToSelectorString()
+        {
+            return "$" + selector.ToSelectorString();
+        }
+    }
     public class TypeSelector : Selector
     {
         public SyntaxKind Kind { get; }
@@ -14,7 +40,10 @@ namespace Qulaly.Matcher.Selectors
         // Type Selector
         public override SelectorMatcher GetMatcher()
         {
-            return (in SelectorMatcherContext ctx) => ctx.Node.Kind() == Kind;
+            return (in SelectorMatcherContext ctx) =>
+            {
+                return ctx.Node.Kind() == Kind;
+            };
         }
 
         public override string ToSelectorString()

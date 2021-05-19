@@ -45,6 +45,7 @@ namespace Qulaly.Syntax
                 ProductionKind.AttributeSelector => VisitAttributeSelector(production),
                 ProductionKind.AttributeSelectorQulalyExtensionNumber => VisitAttributeQulalyExtensionNumberSelector(production),
                 ProductionKind.Combinator => VisitCombinator(production),
+                ProductionKind.Capture => VisitCapture(production),
                 ProductionKind.TypeSelector => VisitTypeSelector(production),
                 _ => throw new QulalyParseException($"Unknown Kind: {production.Kind}"),
             };
@@ -64,6 +65,11 @@ namespace Qulaly.Syntax
         {
             var compoundSelector = production.Children[0]/* PseudoClassSelectorValue */.Children[0]/* CompoundSelector */;
             return new NotPseudoClassSelector((Selector)Visit(compoundSelector));
+        }
+        private SelectorElement VisitCapture(Production production)
+        {
+            var typeSelector = production.Children[0]/* TypeSelector */;
+            return new CaptureSelector((Selector)Visit(typeSelector));
         }
 
         private SelectorElement VisitTypeSelector(Production production)

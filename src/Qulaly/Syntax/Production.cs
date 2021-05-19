@@ -49,5 +49,6 @@ namespace Qulaly.Syntax
         ClassSelector,
         AttributeSelector,
         AttributeSelectorQulalyExtensionNumber,
+        Capture,
     }
 }

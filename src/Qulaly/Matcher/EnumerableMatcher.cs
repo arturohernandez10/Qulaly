@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
 namespace Qulaly.Matcher
@@ -15,6 +15,24 @@ namespace Qulaly.Matcher
             foreach (var child in node.ChildNodes())
             {
                 foreach (var next in GetEnumerable(child, selector, semanticModel))
+                {
+                    yield return next;
+                }
+            }
+        }
+
+        public static IEnumerable<SyntaxNode[]> GetCapturesEnumerable(SyntaxNode node, QulalySelector selector, SemanticModel? semanticModel)
+        {
+            var ctx = new SelectorMatcherContext(node, semanticModel);
+            if (selector.Matcher(ctx))
+            {
+                ctx.CapturedNodes.Reverse();
+                yield return ctx.CapturedNodes.ToArray();
+            }
+
+            foreach (var child in node.ChildNodes())
+            {
+                foreach (var next in GetCapturesEnumerable(child, selector, semanticModel))
                 {
                     yield return next;
                 }

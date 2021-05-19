@@ -313,9 +313,74 @@ namespace ConsoleApp22
 }
 ");
 
-            var lasts = syntaxTree.QuerySelectorAll(":method:last-child").ToArray();
+            var lasts = syntaxTree.QuerySelectorAll("$:method:last-child").ToArray();
             lasts.Should().HaveCount(2);
             lasts.OfType<MethodDeclarationSyntax>().Select(x => x.Identifier.ToFullString()).Should().ContainInOrder("Foo", "MethodB");
+        }
+
+        [Fact]
+        public void PseudoClass_Capture_LastChild()
+        {
+            var syntaxTree = CSharpSyntaxTree.ParseText(@"
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace ConsoleApp22
+{
+    public class Program
+    {
+        static void Main(string[] args) => throw new NotImplementedException();
+        public static async ValueTask<T> Test<T>(int a, string b, T c) => throw new NotImplementedException();
+        object Bar(int key) => throw new NotImplementedException();
+        object Foo(int key) => throw new NotImplementedException();
+    }
+    public class Class1
+    {
+        object MethodA(int arg1) => throw new NotImplementedException();
+        object MethodB(int arg1, string arg2) => throw new NotImplementedException();
+    }
+}
+");
+
+            var lasts = syntaxTree.QueryCapturesAll("$:method:last-child ThrowExpression").SelectMany(a=>a).ToArray();
+            lasts.Should().HaveCount(2);
+            lasts.OfType<MethodDeclarationSyntax>().Select(x => x.Identifier.ToFullString()).Should().ContainInOrder("Foo", "MethodB");
+        }
+
+        [Fact]
+        public void MultipleCapture()
+        {
+            var syntaxTree = CSharpSyntaxTree.ParseText(@"
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace ConsoleApp22
+{
+    public class Program
+    {
+        static void Main(string[] args) {
+            return new Queries.PersonRecord
+            {
+                MiddleName = _middleNameKeys[person.MiddleName],
+                LastName = _lastNameKeys[person.LastName],
+                Phone = _phoneKeys[person.Phone],
+                Gender = _genderKeys[person.Gender]
+            };
+        };
+    }
+    public class Class1
+    {
+        object MethodA(int arg1) => throw new NotImplementedException();
+        object MethodB(int arg1, string arg2) => throw new NotImplementedException();
+    }
+}
+");
+
+            var captures = syntaxTree.QueryCapturesAll("SimpleAssignmentExpression > $IdentifierName ~ ElementAccessExpression > $IdentifierName ~ BracketedArgumentList > * > SimpleMemberAccessExpression $IdentifierName ~ $IdentifierName").ToArray();
+            captures.Should().HaveCount(4);
+            captures[1].OfType<IdentifierNameSyntax>().Select(x => x.Identifier.ToFullString().Trim()).Should().ContainInOrder("LastName", "_lastNameKeys", "person", "LastName");
         }
 
     }
